@@ -4,6 +4,7 @@ use std::{
 };
 
 use itertools::Itertools;
+use serde::Deserialize;
 
 use crate::{
     api_responses::{
@@ -18,7 +19,7 @@ use crate::{
 };
 
 use super::{
-    ApiService, BaseInfoService, CompetitorsService, ConstructService, CountryService, IdService,
+    ApiService, BaseInfoService, CompetitorsService, ConstructService, CountryService,
     PlayerSeasonStatisticsService, PlayerService, PlayerStatisticsService, SeasonService,
 };
 
@@ -49,7 +50,8 @@ pub trait AppStateService<
     Sport: BaseInfoService + ConstructService,
     Competition: BaseInfoService + CountryService,
     Season: BaseInfoService + SeasonService,
-    SportEvent: CompetitorsService<Competitor> + IdService,
+    SportEvent:
+        CompetitorsService<Competitor> + for<'de> Deserialize<'de> + std::cmp::Eq + std::hash::Hash,
     Competitor: BaseInfoService + ConstructService,
     Player: BaseInfoService
         + PlayerStatisticsService
@@ -62,6 +64,7 @@ pub trait AppStateService<
     // Get the HTTP client
     fn get_http_client(&self) -> &HttpClient;
 
+    #[allow(unused)]
     fn set_sports(&mut self, sports: HashSet<Sport>);
 
     // Get available sports
@@ -101,6 +104,7 @@ pub trait AppStateService<
     fn set_sport_events(&mut self, events: HashSet<SportEvent>);
 
     // Get sports events
+    #[allow(unused)]
     fn sport_events(&self) -> HashSet<SportEvent>;
 
     // Set competitors and fetch
@@ -388,21 +392,23 @@ pub trait AppStateService<
     ) -> Result<HashMap<String, Player>, Box<dyn std::error::Error>> {
         let client = self.get_http_client();
 
-        // Create a vector of API URLs to fetch the statistics for each competitor
-        let api_urls = self.competitors_api_urls();
+        // Create a set of API URLs to fetch the statistics for each competitor
+        let competitors_api_urls = self.competitors_api_urls();
 
         let mut players = HashMap::new();
 
+        let competitors_api_calls = competitors_api_urls
+            .into_iter()
+            .map(|url| client.get_json_data::<CompetitorStatisticsApiResponse<Player>>(url));
+
         // Fetch the statistics for each competitor concurrently using join_all
-        futures::future::join_all(
-            api_urls
-                .into_iter()
-                .map(|url| client.get_json_data::<CompetitorStatisticsApiResponse<Player>>(url)),
-        )
-        .await
-        .into_iter()
-        // Handle the response for each competitor
-        .for_each(|response| self.handle_competitor_statistics_response(&mut players, response));
+        futures::future::join_all(competitors_api_calls)
+            .await
+            .into_iter()
+            // Handle the response for each competitor
+            .for_each(|response| {
+                self.handle_competitor_statistics_response(&mut players, response)
+            });
 
         Ok(players)
     }
@@ -531,6 +537,5 @@ pub trait AppStateService<
             // Ask the users if they want to continue
             prompt_boolean("Do you want to explore other sports, competitions, or seasons?");
         }
-        Ok(())
     }
 }

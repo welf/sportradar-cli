@@ -11,6 +11,7 @@ mod team;
 pub use app_state::AppState;
 pub use competition::Competition;
 pub use competition_season::CompetitionSeason;
+#[allow(unused)]
 pub use country::Country;
 pub use player::Player;
 pub use player_statistics::PlayerStatistics;

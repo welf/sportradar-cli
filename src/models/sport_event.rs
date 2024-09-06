@@ -1,6 +1,6 @@
 use serde::Deserialize;
 
-use crate::services::{CompetitorsService, IdService};
+use crate::services::CompetitorsService;
 
 use super::Team;
 
@@ -8,12 +8,6 @@ use super::Team;
 pub struct SportEvent {
     pub id: String,
     competitors: Vec<Team>,
-}
-
-impl IdService for SportEvent {
-    fn id(&self) -> String {
-        self.id.clone()
-    }
 }
 
 impl CompetitorsService<Team> for SportEvent {

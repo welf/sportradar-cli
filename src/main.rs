@@ -1,16 +1,10 @@
-#![allow(unused)]
-
-use std::{collections::HashSet, error::Error};
+use std::error::Error;
 
 use dotenvy::dotenv;
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
 use reqwest_retry::{policies::ExponentialBackoff, RetryTransientMiddleware};
 
-use self::{
-    helpers::prompt_select,
-    models::{AppState, Sport},
-    services::{AppStateService, PlayerSeasonStatisticsService},
-};
+use self::{models::AppState, services::AppStateService};
 
 mod api_responses;
 mod enums;
@@ -34,16 +28,6 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // Create an instance of the app state
     let mut app: AppState<ClientWithMiddleware> = AppState::new(client);
-
-    // // Set (all) the sports to the state (in fact there is only one sport in trial version)
-    // app.set_sports({
-    //     let mut set = HashSet::new();
-    //     set.insert(sport.clone());
-    //     set
-    // });
-
-    // // Set the selected sport to the state
-    // app.set_selected_sport(&sport);
 
     // ===== RUN THE APP =====
 
