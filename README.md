@@ -1,8 +1,8 @@
-# Matchday Backend Developer Take Home Assignment
+# Rust Backend Developer Take Home Assignment
 
 ## Preface
 
-The initial take-home assignment is described in the [Matchday_Rust_assignment_v2.md](Matchday_Rust_assignment_v2.md) file.
+The initial take-home assignment is described in the [Rust_assignment_v2.md](Rust_assignment_v2.md) file.
 
 ## Solution description
 
